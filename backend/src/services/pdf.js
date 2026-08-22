@@ -4,8 +4,11 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
+// Use a specific Chrome version that we know works
+const CHROME_VERSION = '130.0.6723.116';
+
 async function getChromePath() {
-    // Try to find existing Chrome
+    // Try to find existing Chrome on system
     const possiblePaths = [
         '/usr/bin/google-chrome',
         '/usr/bin/chromium',
@@ -23,8 +26,8 @@ async function getChromePath() {
         }
     }
 
-    // Download Chrome to a writable directory
-    console.log('📦 Downloading Chrome for PDF generation...');
+    // Try to download a specific Chrome version
+    console.log(`📦 Downloading Chrome ${CHROME_VERSION} for PDF generation...`);
     const cacheDir = path.join(__dirname, '../../.chrome-cache');
     
     if (!fs.existsSync(cacheDir)) {
@@ -36,7 +39,7 @@ async function getChromePath() {
             cacheDir: cacheDir,
             browser: 'chrome',
             platform: os.platform(),
-            buildId: 'latest',
+            buildId: CHROME_VERSION,
         });
         
         const executablePath = browser.executablePath;
@@ -44,8 +47,22 @@ async function getChromePath() {
         return executablePath;
     } catch (error) {
         console.error('❌ Failed to download Chrome:', error.message);
-        // Fallback: try to use system Chrome
-        return '/usr/bin/google-chrome';
+        
+        // Last resort: try a different version
+        try {
+            console.log('🔄 Trying Chrome 129...');
+            const browser = await install({
+                cacheDir: cacheDir,
+                browser: 'chrome',
+                platform: os.platform(),
+                buildId: '129.0.6668.89',
+            });
+            return browser.executablePath;
+        } catch (err) {
+            console.error('❌ All Chrome download attempts failed');
+            // Fallback to what might be available
+            return '/usr/bin/google-chrome';
+        }
     }
 }
 
@@ -217,7 +234,9 @@ async function generateMeetingPDF(meeting, actions) {
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
-            '--disable-gpu'
+            '--disable-gpu',
+            '--disable-accelerated-2d-canvas',
+            '--disable-background-timer-throttling'
         ]
     });
     
