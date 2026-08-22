@@ -53,7 +53,6 @@ function App() {
                 throw new Error(data.error || 'Authentication failed');
             }
 
-            // Save token and user
             localStorage.setItem('auth_token', data.session.access_token);
             localStorage.setItem('auth_user', JSON.stringify(data.user));
             setToken(data.session.access_token);
@@ -61,8 +60,6 @@ function App() {
             setIsAuthenticated(true);
             setEmail('');
             setPassword('');
-            
-            // Fetch meetings after login
             await fetchMeetings(data.session.access_token);
 
         } catch (error) {
@@ -151,6 +148,30 @@ function App() {
             console.error('Error processing meeting:', error);
         }
         setProcessingId(null);
+    };
+
+    const handleDownloadPDF = async (id, title) => {
+        try {
+            const res = await fetch(`${API_URL}/api/meetings/${id}/pdf`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (res.ok) {
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            }
+        } catch (error) {
+            console.error('Error downloading PDF:', error);
+        }
     };
 
     const toggleExpand = (id) => {
@@ -272,22 +293,30 @@ function App() {
                                             </p>
                                             
                                             {m.summary ? (
-                                                <div className="ai-results">
-                                                    <div className="result-section">
-                                                        <h4>📝 Summary</h4>
-                                                        <p>{m.summary}</p>
-                                                    </div>
-                                                    {m.decisions && JSON.parse(m.decisions || '[]').length > 0 && (
+                                                <>
+                                                    <div className="ai-results">
                                                         <div className="result-section">
-                                                            <h4>✅ Decisions</h4>
-                                                            <ul>
-                                                                {JSON.parse(m.decisions || '[]').map((d, i) => (
-                                                                    <li key={i}>{d}</li>
-                                                                ))}
-                                                            </ul>
+                                                            <h4>📝 Summary</h4>
+                                                            <p>{m.summary}</p>
                                                         </div>
-                                                    )}
-                                                </div>
+                                                        {m.decisions && JSON.parse(m.decisions || '[]').length > 0 && (
+                                                            <div className="result-section">
+                                                                <h4>✅ Decisions</h4>
+                                                                <ul>
+                                                                    {JSON.parse(m.decisions || '[]').map((d, i) => (
+                                                                        <li key={i}>{d}</li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <button 
+                                                        className="pdf-btn"
+                                                        onClick={() => handleDownloadPDF(m.id, m.title)}
+                                                    >
+                                                        📄 Download PDF Report
+                                                    </button>
+                                                </>
                                             ) : (
                                                 <button 
                                                     className="process-btn"

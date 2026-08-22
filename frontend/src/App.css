@@ -351,3 +351,19 @@ body {
         align-items: flex-start;
     }
 }
+.pdf-btn {
+    padding: 8px 16px;
+    background: #48bb78;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 12px;
+    width: 100%;
+}
+
+.pdf-btn:hover {
+    background: #38a169;
+}

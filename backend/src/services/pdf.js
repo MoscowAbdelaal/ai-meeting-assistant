@@ -1,0 +1,197 @@
+const playwright = require('playwright');
+const path = require('path');
+const fs = require('fs');
+
+async function generateMeetingPDF(meeting, actions) {
+    // Parse decisions if they exist
+    let decisions = [];
+    if (meeting.decisions) {
+        try {
+            decisions = JSON.parse(meeting.decisions);
+        } catch (e) {
+            decisions = [];
+        }
+    }
+
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>${meeting.title}</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+                padding: 50px;
+                color: #1a1a2e;
+                background: white;
+                line-height: 1.6;
+            }
+            .header {
+                border-bottom: 3px solid #4a90d9;
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+            }
+            .header h1 {
+                font-size: 28px;
+                color: #1a1a2e;
+            }
+            .header .subtitle {
+                color: #666;
+                font-size: 14px;
+                margin-top: 4px;
+            }
+            .section {
+                margin: 25px 0;
+                page-break-inside: avoid;
+            }
+            .section h2 {
+                font-size: 18px;
+                color: #2d3748;
+                border-bottom: 2px solid #e2e8f0;
+                padding-bottom: 8px;
+                margin-bottom: 12px;
+            }
+            .section h3 {
+                font-size: 15px;
+                color: #4a5568;
+                margin: 8px 0;
+            }
+            .summary-box {
+                background: #f7fafc;
+                padding: 16px 20px;
+                border-radius: 8px;
+                border-left: 4px solid #4a90d9;
+                color: #2d3748;
+            }
+            .decision-item {
+                padding: 6px 0;
+                padding-left: 20px;
+                position: relative;
+                color: #2d3748;
+            }
+            .decision-item::before {
+                content: "✓";
+                position: absolute;
+                left: 0;
+                color: #48bb78;
+                font-weight: bold;
+            }
+            .action-item {
+                padding: 10px 0;
+                border-bottom: 1px solid #edf2f7;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .action-item:last-child {
+                border-bottom: none;
+            }
+            .action-task {
+                font-weight: 500;
+                color: #2d3748;
+            }
+            .action-assignee {
+                color: #718096;
+                font-size: 14px;
+                background: #edf2f7;
+                padding: 2px 12px;
+                border-radius: 12px;
+            }
+            .footer {
+                margin-top: 40px;
+                padding-top: 20px;
+                border-top: 2px solid #e2e8f0;
+                color: #a0aec0;
+                font-size: 12px;
+                text-align: center;
+            }
+            .badge {
+                display: inline-block;
+                background: #48bb78;
+                color: white;
+                padding: 2px 10px;
+                border-radius: 12px;
+                font-size: 11px;
+                margin-left: 8px;
+            }
+            .empty-state {
+                color: #a0aec0;
+                font-style: italic;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>📋 ${meeting.title}</h1>
+            <div class="subtitle">
+                Generated: ${new Date().toLocaleString()} 
+                ${meeting.summary ? '<span class="badge">✅ AI Processed</span>' : ''}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📝 Summary</h2>
+            <div class="summary-box">
+                ${meeting.summary || 'No summary available. Process this meeting with AI first.'}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>✅ Decisions</h2>
+            ${decisions && decisions.length > 0 
+                ? decisions.map(d => `<div class="decision-item">${d}</div>`).join('')
+                : '<div class="empty-state">No decisions recorded</div>'
+            }
+        </div>
+
+        <div class="section">
+            <h2>📌 Action Items</h2>
+            ${actions && actions.length > 0 
+                ? actions.map(a => `
+                    <div class="action-item">
+                        <span class="action-task">${a.description}</span>
+                        <span class="action-assignee">👤 ${a.assigned_to || 'Unassigned'}</span>
+                    </div>
+                `).join('')
+                : '<div class="empty-state">No action items</div>'
+            }
+        </div>
+
+        <div class="footer">
+            Generated by AI Meeting Assistant • ${new Date().getFullYear()}
+        </div>
+    </body>
+    </html>
+    `;
+
+    const browser = await playwright.chromium.launch();
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle' });
+    
+    // Ensure reports directory exists
+    const reportsDir = path.join(__dirname, '../../reports');
+    if (!fs.existsSync(reportsDir)) {
+        fs.mkdirSync(reportsDir, { recursive: true });
+    }
+    
+    const pdfPath = path.join(reportsDir, `meeting_${meeting.id}.pdf`);
+    
+    await page.pdf({
+        path: pdfPath,
+        format: 'A4',
+        printBackground: true,
+        margin: { 
+            top: '20mm', 
+            bottom: '20mm', 
+            left: '20mm', 
+            right: '20mm' 
+        }
+    });
+    
+    await browser.close();
+    return pdfPath;
+}
+
+module.exports = { generateMeetingPDF };

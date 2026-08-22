@@ -7,12 +7,7 @@ const { initDatabase } = require('./database');
 const meetingRoutes = require('./routes/meetings');
 const aiRoutes = require('./routes/ai');
 const authRoutes = require('./routes/auth');
-
-// Debug: Check if API keys are loaded
-console.log('🔍 Environment check:');
-console.log('🔑 GEMINI_API_KEY exists?', !!process.env.GEMINI_API_KEY);
-console.log('🔑 SUPABASE_URL exists?', !!process.env.SUPABASE_URL);
-console.log('🔑 SUPABASE_ANON_KEY exists?', !!process.env.SUPABASE_ANON_KEY);
+const pdfRoutes = require('./routes/pdf');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -29,6 +24,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/meetings', meetingRoutes);
 app.use('/api/meetings', aiRoutes);
+app.use('/api/meetings', pdfRoutes);
 
 // Start server
 async function start() {
@@ -39,6 +35,7 @@ async function start() {
         console.log(`🔐 Auth: http://localhost:${PORT}/api/auth`);
         console.log(`📋 Meetings: http://localhost:${PORT}/api/meetings`);
         console.log(`🧠 AI Process: POST /api/meetings/:id/process`);
+        console.log(`📄 PDF: GET /api/meetings/:id/pdf`);
     });
 }
 
