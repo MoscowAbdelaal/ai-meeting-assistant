@@ -1,4 +1,5 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const cache = require('./cache');
 
 const geminiApiKey = process.env.GEMINI_API_KEY;
 
@@ -12,7 +13,7 @@ const genAI = geminiApiKey ? new GoogleGenerativeAI(geminiApiKey) : null;
 
 console.log('🔑 Gemini API:', geminiApiKey ? '✅ Initialized' : '❌ Not configured');
 
-// Manual fallback parser (for when AI fails)
+// Manual fallback parser
 function parseMeetingManually(transcript) {
     console.log('📝 Using manual fallback parser...');
     
@@ -73,13 +74,22 @@ function parseMeetingManually(transcript) {
 }
 
 async function processMeeting(transcript) {
+    // Check cache first
+    const cacheKey = cache.generateKey(transcript);
+    
+    if (cache.has(cacheKey)) {
+        console.log('💾 Returning cached AI result...');
+        return cache.get(cacheKey);
+    }
+
+    console.log('🤖 Cache miss - calling Gemini API...');
+
     // Try Gemini if available
     if (genAI) {
         try {
-            console.log('🧠 Processing meeting with Gemini AI...');
+            console.log('🧠 Processing meeting with Gemini AI (gemini-3.1-flash-lite)...');
             console.log('📝 Transcript length:', transcript.length);
 
-            // Use the correct model name - gemini-1.5-flash (no prefix needed)
             const model = genAI.getGenerativeModel({ 
                 model: 'gemini-3.1-flash-lite'
             });
@@ -127,20 +137,26 @@ ${transcript}
             console.log('📋 Decisions:', parsed.decisions?.length || 0);
             console.log('📌 Action Items:', parsed.actionItems?.length || 0);
             
+            // Store in cache (TTL: 24 hours)
+            cache.set(cacheKey, parsed);
+            
             return parsed;
         } catch (error) {
             console.error('❌ Gemini error:', error.message);
-            if (error.response) {
-                console.error('Response:', error.response);
-            }
             console.log('⚠️ Falling back to manual parser...');
-            return parseMeetingManually(transcript);
+            
+            const parsed = parseMeetingManually(transcript);
+            // Cache the fallback result too (shorter TTL: 1 hour)
+            cache.set(cacheKey, parsed, 3600);
+            return parsed;
         }
     }
     
     // Fallback to manual parser
     console.log('⚠️ No AI configured, using manual parser...');
-    return parseMeetingManually(transcript);
+    const parsed = parseMeetingManually(transcript);
+    cache.set(cacheKey, parsed, 3600);
+    return parsed;
 }
 
 module.exports = { processMeeting };
