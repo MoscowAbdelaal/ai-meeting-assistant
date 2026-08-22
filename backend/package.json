@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "jest --testTimeout=30000 --forceExit"
+    "test": "jest --testTimeout=30000 --forceExit",
+    "postinstall": "npx playwright install || true"
   },
   "dependencies": {
     "@google/generative-ai": "^0.1.0",

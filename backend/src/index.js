@@ -16,32 +16,28 @@ const cache = require('./services/cache');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Allow CORS from your frontend URL
-const allowedOrigins = [
-    'http://localhost:3000',
-    'https://ai-meeting-assistant-frontend-h2po.onrender.com',
-    'https://ai-meeting-assistant-frontend.onrender.com'
-];
-
+// CORS - Allow all origins for testing
 app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            console.log('CORS blocked origin:', origin);
-            callback(null, true); // Allow all in development
-        }
-    },
-    credentials: true
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
 
 // Health check
+app.get('/', (req, res) => {
+    res.json({
+        status: 'ok',
+        message: 'AI Meeting Assistant API',
+        timestamp: new Date().toISOString(),
+        cache: cache.getStats()
+    });
+});
+
 app.get('/health', (req, res) => {
-    res.json({ 
-        status: 'ok', 
+    res.json({
+        status: 'ok',
         timestamp: new Date().toISOString(),
         cache: cache.getStats()
     });
@@ -58,19 +54,15 @@ app.use('/api/metrics', metricsRoutes);
 // Start server
 async function start() {
     await initDatabase();
-    
-    // Start the background job
     startReminderJob();
-    
+
     app.listen(PORT, () => {
-        console.log(`🚀 Backend running at http://localhost:${PORT}`);
-        console.log(`📚 Health: http://localhost:${PORT}/health`);
-        console.log(`🔐 Auth: http://localhost:${PORT}/api/auth`);
-        console.log(`📋 Meetings: http://localhost:${PORT}/api/meetings`);
-        console.log(`🧠 AI Process: POST /api/meetings/:id/process`);
+        console.log(`🚀 Backend running on port ${PORT}`);
+        console.log(`📚 Health: /health`);
+        console.log(`🔐 Auth: /api/auth`);
+        console.log(`📋 Meetings: /api/meetings`);
+        console.log(`🧠 AI: POST /api/meetings/:id/process`);
         console.log(`📄 PDF: GET /api/meetings/:id/pdf`);
-        console.log(`💾 Cache: GET /api/cache/stats`);
-        console.log(`⏰ Reminders: Scheduled daily at 9:00 AM`);
     });
 }
 

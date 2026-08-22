@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-const API_URL = 'https://ai-meeting-assistant-h0if.onrender.com';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -13,7 +13,6 @@ function App() {
     const [authLoading, setAuthLoading] = useState(false);
     const [authError, setAuthError] = useState('');
 
-    // Meeting state
     const [meetings, setMeetings] = useState([]);
     const [title, setTitle] = useState('');
     const [transcript, setTranscript] = useState('');
@@ -21,7 +20,6 @@ function App() {
     const [processingId, setProcessingId] = useState(null);
     const [expandedMeeting, setExpandedMeeting] = useState(null);
 
-    // Check for saved token on load
     useEffect(() => {
         const savedToken = localStorage.getItem('auth_token');
         const savedUser = localStorage.getItem('auth_user');
@@ -33,13 +31,11 @@ function App() {
         }
     }, []);
 
-    // Auth functions
     const handleAuth = async (e) => {
         e.preventDefault();
         setAuthLoading(true);
         setAuthError('');
 
-        // Basic email validation (simple but not too strict)
         if (!email || !email.includes('@') || !email.includes('.')) {
             setAuthError('Please enter a valid email address');
             setAuthLoading(false);
@@ -86,9 +82,7 @@ function App() {
         try {
             await fetch(`${API_URL}/api/auth/signout`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: { 'Authorization': `Bearer ${token}` }
             });
         } catch (error) {
             console.error('Logout error:', error);
@@ -102,13 +96,10 @@ function App() {
         setMeetings([]);
     };
 
-    // Meeting functions
     const fetchMeetings = async (authToken) => {
         try {
             const res = await fetch(`${API_URL}/api/meetings`, {
-                headers: {
-                    'Authorization': `Bearer ${authToken || token}`
-                }
+                headers: { 'Authorization': `Bearer ${authToken || token}` }
             });
             const data = await res.json();
             setMeetings(data.meetings || []);
@@ -148,9 +139,7 @@ function App() {
         try {
             const res = await fetch(`${API_URL}/api/meetings/${id}/process`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (res.ok) {
@@ -166,9 +155,7 @@ function App() {
     const handleDownloadPDF = async (id, title) => {
         try {
             const res = await fetch(`${API_URL}/api/meetings/${id}/pdf`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (res.ok) {
@@ -191,45 +178,61 @@ function App() {
         setExpandedMeeting(expandedMeeting === id ? null : id);
     };
 
-    // Auth Screen
+    // Auth Screen - Beautiful Modern Design
     if (!isAuthenticated) {
         return (
-            <div className="app auth-screen">
-                <div className="auth-container">
-                    <h1>📋 AI Meeting Assistant</h1>
-                    <h2>{isLogin ? 'Sign In' : 'Create Account'}</h2>
-                    
-                    <form onSubmit={handleAuth}>
-                        <input
-                            type="email"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                        <input
-                            type="password"
-                            placeholder="Password (min 6 chars)"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            minLength={6}
-                        />
-                        {authError && <p className="auth-error">{authError}</p>}
-                        <button type="submit" disabled={authLoading}>
-                            {authLoading ? 'Loading...' : (isLogin ? 'Sign In' : 'Create Account')}
-                        </button>
-                    </form>
-                    
-                    <p className="auth-switch">
-                        {isLogin ? "Don't have an account?" : "Already have an account?"}
-                        <button onClick={() => { setIsLogin(!isLogin); setAuthError(''); }}>
-                            {isLogin ? 'Create one' : 'Sign in'}
-                        </button>
-                    </p>
-                    
-                    <div style={{ marginTop: '20px', fontSize: '12px', color: '#888' }}>
-                        <p>Demo: demouser789@proton.me / SecurePass123!</p>
+            <div className="auth-screen">
+                <div className="auth-background">
+                    <div className="auth-card">
+                        <div className="auth-header">
+                            <div className="auth-icon">📋</div>
+                            <h1>AI Meeting Assistant</h1>
+                            <p>Extract insights from your meetings instantly</p>
+                        </div>
+                        
+                        <h2>{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
+                        
+                        <form onSubmit={handleAuth}>
+                            <div className="input-group">
+                                <label>Email Address</label>
+                                <input
+                                    type="email"
+                                    placeholder="you@example.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            
+                            <div className="input-group">
+                                <label>Password</label>
+                                <input
+                                    type="password"
+                                    placeholder="••••••••"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    minLength={6}
+                                />
+                            </div>
+                            
+                            {authError && <div className="auth-error">{authError}</div>}
+                            
+                            <button type="submit" disabled={authLoading} className="auth-btn">
+                                {authLoading ? 'Loading...' : (isLogin ? 'Sign In' : 'Create Account')}
+                            </button>
+                        </form>
+                        
+                        <p className="auth-switch">
+                            {isLogin ? "Don't have an account?" : "Already have an account?"}
+                            <button onClick={() => { setIsLogin(!isLogin); setAuthError(''); }}>
+                                {isLogin ? 'Sign Up' : 'Sign In'}
+                            </button>
+                        </p>
+                        
+                        <div className="auth-demo">
+                            <p>Demo: demouser789@proton.me / SecurePass123!</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -239,20 +242,23 @@ function App() {
     // Main App
     return (
         <div className="app">
-            <header className="app-header">
+            <header className="header">
                 <div className="header-content">
-                    <h1>📋 AI Meeting Assistant</h1>
-                    <div className="user-info">
-                        <span>👤 {user?.email}</span>
+                    <div className="header-left">
+                        <span className="header-icon">📋</span>
+                        <h1>AI Meeting Assistant</h1>
+                    </div>
+                    <div className="header-right">
+                        <span className="user-email">👤 {user?.email}</span>
                         <button onClick={handleLogout} className="logout-btn">Logout</button>
                     </div>
                 </div>
-                <p className="subtitle">Upload transcripts → AI extracts summaries, decisions, and action items</p>
+                <p className="header-subtitle">Upload transcripts → AI extracts summaries, decisions, and action items</p>
             </header>
 
-            <main className="app-main">
+            <main className="main">
                 <section className="create-section">
-                    <h2>Create New Meeting</h2>
+                    <h2>✏️ New Meeting</h2>
                     <form onSubmit={handleSubmit}>
                         <input
                             type="text"
@@ -260,46 +266,45 @@ function App() {
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             required
+                            className="input-field"
                         />
                         <textarea
-                            placeholder="Paste meeting transcript here..."
+                            placeholder="Paste your meeting transcript here..."
                             value={transcript}
                             onChange={(e) => setTranscript(e.target.value)}
-                            rows={6}
+                            rows={8}
                             required
+                            className="textarea-field"
                         />
-                        <button type="submit" disabled={loading}>
-                            {loading ? 'Saving...' : 'Save Meeting'}
+                        <button type="submit" disabled={loading} className="save-btn">
+                            {loading ? 'Saving...' : '📥 Save Meeting'}
                         </button>
                     </form>
                 </section>
 
                 <section className="list-section">
-                    <h2>Meetings ({meetings.length})</h2>
+                    <h2>📊 Your Meetings ({meetings.length})</h2>
                     {meetings.length === 0 ? (
-                        <p className="empty">No meetings yet. Create one above!</p>
+                        <div className="empty-state">
+                            <p>No meetings yet</p>
+                            <p className="empty-sub">Create your first meeting to get started</p>
+                        </div>
                     ) : (
                         <ul className="meeting-list">
                             {meetings.map((m) => (
                                 <li key={m.id} className="meeting-item">
                                     <div className="meeting-header" onClick={() => toggleExpand(m.id)}>
-                                        <div>
+                                        <div className="meeting-info">
                                             <strong>{m.title}</strong>
-                                            <span className="date">
+                                            <span className="meeting-date">
                                                 {new Date(m.created_at).toLocaleDateString()}
                                             </span>
                                             {m.summary && (
                                                 <span className="badge">✅ AI Processed</span>
                                             )}
                                         </div>
-                                        <button 
-                                            className="expand-btn"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                toggleExpand(m.id);
-                                            }}
-                                        >
-                                            {expandedMeeting === m.id ? '▼' : '▶'}
+                                        <button className="expand-btn">
+                                            {expandedMeeting === m.id ? '−' : '+'}
                                         </button>
                                     </div>
 
@@ -312,12 +317,12 @@ function App() {
                                             {m.summary ? (
                                                 <>
                                                     <div className="ai-results">
-                                                        <div className="result-section">
+                                                        <div className="result-card">
                                                             <h4>📝 Summary</h4>
                                                             <p>{m.summary}</p>
                                                         </div>
                                                         {m.decisions && JSON.parse(m.decisions || '[]').length > 0 && (
-                                                            <div className="result-section">
+                                                            <div className="result-card">
                                                                 <h4>✅ Decisions</h4>
                                                                 <ul>
                                                                     {JSON.parse(m.decisions || '[]').map((d, i) => (
