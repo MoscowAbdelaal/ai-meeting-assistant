@@ -11,7 +11,7 @@ body {
 }
 
 .app {
-    max-width: 900px;
+    max-width: 1000px;
     margin: 0 auto;
     padding: 20px;
 }
@@ -27,9 +27,14 @@ body {
     color: #1a1a2e;
 }
 
+.app-header .subtitle {
+    color: #666;
+    margin-top: 4px;
+}
+
 .app-main {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1.5fr;
     gap: 40px;
 }
 
@@ -86,6 +91,8 @@ body {
     padding: 24px;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    max-height: 600px;
+    overflow-y: auto;
 }
 
 .list-section h2 {
@@ -98,25 +105,103 @@ body {
     padding: 0;
 }
 
-.meeting-list li {
+.meeting-item {
     padding: 12px 0;
     border-bottom: 1px solid #eee;
 }
 
-.meeting-list li:last-child {
+.meeting-item:last-child {
     border-bottom: none;
 }
 
-.meeting-list .date {
+.meeting-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.meeting-header .date {
     font-size: 12px;
     color: #888;
     margin-left: 12px;
 }
 
-.meeting-list .preview {
+.badge {
+    background: #4CAF50;
+    color: white;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    margin-left: 8px;
+}
+
+.expand-btn {
+    background: none;
+    border: none;
     font-size: 14px;
+    cursor: pointer;
+    color: #888;
+    padding: 4px 8px;
+}
+
+.meeting-details {
+    margin-top: 10px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.transcript-preview {
     color: #666;
-    margin-top: 4px;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.process-btn {
+    padding: 8px 16px;
+    background: #ff6b35;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.process-btn:hover:not(:disabled) {
+    background: #e55a2b;
+}
+
+.process-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.ai-results {
+    margin-top: 12px;
+}
+
+.result-section {
+    margin-bottom: 12px;
+}
+
+.result-section h4 {
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.result-section p {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.5;
+}
+
+.result-section ul {
+    padding-left: 20px;
+    color: #555;
+    font-size: 14px;
 }
 
 .empty {

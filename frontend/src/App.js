@@ -6,6 +6,8 @@ function App() {
     const [title, setTitle] = useState('');
     const [transcript, setTranscript] = useState('');
     const [loading, setLoading] = useState(false);
+    const [processingId, setProcessingId] = useState(null);
+    const [expandedMeeting, setExpandedMeeting] = useState(null);
 
     const fetchMeetings = async () => {
         try {
@@ -44,10 +46,33 @@ function App() {
         setLoading(false);
     };
 
+    const handleProcessAI = async (id) => {
+        setProcessingId(id);
+        try {
+            const res = await fetch(`http://localhost:3001/api/meetings/${id}/process`, {
+                method: 'POST',
+            });
+
+            if (res.ok) {
+                fetchMeetings();
+                // Auto-expand the meeting after processing
+                setExpandedMeeting(id);
+            }
+        } catch (error) {
+            console.error('Error processing meeting:', error);
+        }
+        setProcessingId(null);
+    };
+
+    const toggleExpand = (id) => {
+        setExpandedMeeting(expandedMeeting === id ? null : id);
+    };
+
     return (
         <div className="app">
             <header className="app-header">
                 <h1>📋 AI Meeting Assistant</h1>
+                <p className="subtitle">Upload transcripts → AI extracts summaries, decisions, and action items</p>
             </header>
 
             <main className="app-main">
@@ -81,14 +106,62 @@ function App() {
                     ) : (
                         <ul className="meeting-list">
                             {meetings.map((m) => (
-                                <li key={m.id}>
-                                    <strong>{m.title}</strong>
-                                    <span className="date">
-                                        {new Date(m.created_at).toLocaleDateString()}
-                                    </span>
-                                    <p className="preview">
-                                        {m.transcript ? m.transcript.slice(0, 100) + '...' : ''}
-                                    </p>
+                                <li key={m.id} className="meeting-item">
+                                    <div className="meeting-header" onClick={() => toggleExpand(m.id)}>
+                                        <div>
+                                            <strong>{m.title}</strong>
+                                            <span className="date">
+                                                {new Date(m.created_at).toLocaleDateString()}
+                                            </span>
+                                            {m.summary && (
+                                                <span className="badge">✅ AI Processed</span>
+                                            )}
+                                        </div>
+                                        <button 
+                                            className="expand-btn"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleExpand(m.id);
+                                            }}
+                                        >
+                                            {expandedMeeting === m.id ? '▼' : '▶'}
+                                        </button>
+                                    </div>
+
+                                    {expandedMeeting === m.id && (
+                                        <div className="meeting-details">
+                                            <p className="transcript-preview">
+                                                {m.transcript.slice(0, 200)}...
+                                            </p>
+                                            
+                                            {m.summary ? (
+                                                <div className="ai-results">
+                                                    <div className="result-section">
+                                                        <h4>📝 Summary</h4>
+                                                        <p>{m.summary}</p>
+                                                    </div>
+                                                    {m.decisions && JSON.parse(m.decisions || '[]').length > 0 && (
+                                                        <div className="result-section">
+                                                            <h4>✅ Decisions</h4>
+                                                            <ul>
+                                                                {JSON.parse(m.decisions || '[]').map((d, i) => (
+                                                                    <li key={i}>{d}</li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <button 
+                                                    className="process-btn"
+                                                    onClick={() => handleProcessAI(m.id)}
+                                                    disabled={processingId === m.id}
+                                                >
+                                                    {processingId === m.id ? '⏳ Processing...' : '🧠 Process with AI'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
                                 </li>
                             ))}
                         </ul>
