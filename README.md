@@ -7,7 +7,7 @@ AI-powered tool that extracts summaries, decisions, and action items from meetin
 - **Frontend**: https://ai-meeting-assistant-frontend-h2po.onrender.com
 - **Backend API**: https://ai-meeting-assistant-h0if.onrender.com
 
-## ✨ Features
+## 📋 Features
 
 - ✅ **Authentication** - Sign up, login, protected routes (Supabase)
 - ✅ **AI Processing** - Extract summaries, decisions, action items (Gemini 3.1 Flash Lite)
@@ -34,6 +34,19 @@ AI-powered tool that extracts summaries, decisions, and action items from meetin
 | Testing | Jest + Supertest |
 | Deployment | Render.com |
 | Container | Docker |
+
+## 🏗️ Architecture
+User → Frontend (React) → Backend API → Database
+↓
+AI Processing (Gemini)
+↓
+→ Summary + Decisions + Actions
+↓
+→ PDF Report (Download)
+→ Email Reminders (Cron)
+→ Cache (24-hour TTL)
+
+text
 
 ## 📦 Quick Start
 
@@ -66,7 +79,7 @@ The system calculates time saved automatically:
 
 Manual: 30 minutes per meeting
 AI: 3 minutes per meeting
-Time saved: 27 minutes per meeting (10x)
+Time saved: 27 minutes per meeting (10x improvement)
 📝 Environment Variables
 
 env
@@ -88,6 +101,23 @@ POST	/api/meetings/:id/process	Process with AI
 GET	/api/meetings/:id/pdf	Download PDF
 GET	/api/cache/stats	Cache statistics
 GET	/api/metrics/time-saved	10x metrics
+📄 7 Concepts Implemented
+
+#	Concept	Implementation
+1	API endpoints	Express REST API with validation
+2	Database	SQLite with user-specific data
+3	Authentication	Supabase Auth (signup, signin, protected)
+4	LLM Integration	Gemini 3.1 Flash Lite with fallback
+5	Reporting	Puppeteer PDF generation
+6	Background Jobs	Node-cron daily reminders
+7	Caching	In-memory cache with 24-hour TTL
+🎯 Stretch Features
+
+Feature	Implementation
+Rate Limiting	Express-rate-limit (5/min auth, 10/hour AI)
+Test Suite	Jest + Supertest
+10x Metrics	Time saved calculation endpoint
+Docker	Containerized deployment
 📄 License
 
 MIT
