@@ -2,8 +2,12 @@ const express = require('express');
 const { processMeeting } = require('../services/ai');
 const { getDb } = require('../database');
 const { requireAuth } = require('../services/auth');
+const { aiLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
+
+// Apply AI rate limiting
+router.use(aiLimiter);
 
 // All AI routes require authentication
 router.use(requireAuth);

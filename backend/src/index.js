@@ -11,12 +11,15 @@ const pdfRoutes = require('./routes/pdf');
 const cacheRoutes = require('./routes/cache');
 const { startReminderJob } = require('./jobs/reminders');
 const cache = require('./services/cache');
+const metricsRoutes = require('./routes/metrics');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
+app.use('/api/metrics', metricsRoutes);
+
 
 // Health check
 app.get('/health', (req, res) => {
