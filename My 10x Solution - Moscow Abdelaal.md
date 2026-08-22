@@ -105,8 +105,8 @@ bash
 docker-compose up --build
 Option 3: Production (Render.com)
 
-Backend: https://ai-meeting-assistant.onrender.com
-Frontend: https://ai-meeting-assistant-frontend.onrender.com
+Backend: https://ai-meeting-assistant-h0if.onrender.com/
+Frontend: https://ai-meeting-assistant-frontend-h2po.onrender.com/
 7. Demo Path (5 Minutes)
 
 Sign up for a new account (1 minute)
