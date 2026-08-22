@@ -1,9 +1,8 @@
-const playwright = require('playwright');
+const puppeteer = require('puppeteer');
 const path = require('path');
 const fs = require('fs');
 
 async function generateMeetingPDF(meeting, actions) {
-    // Parse decisions if they exist
     let decisions = [];
     if (meeting.decisions) {
         try {
@@ -52,11 +51,6 @@ async function generateMeetingPDF(meeting, actions) {
                 border-bottom: 2px solid #e2e8f0;
                 padding-bottom: 8px;
                 margin-bottom: 12px;
-            }
-            .section h3 {
-                font-size: 15px;
-                color: #4a5568;
-                margin: 8px 0;
             }
             .summary-box {
                 background: #f7fafc;
@@ -166,11 +160,14 @@ async function generateMeetingPDF(meeting, actions) {
     </html>
     `;
 
-    const browser = await playwright.chromium.launch();
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle' });
+    const browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
     
-    // Ensure reports directory exists
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+    
     const reportsDir = path.join(__dirname, '../../reports');
     if (!fs.existsSync(reportsDir)) {
         fs.mkdirSync(reportsDir, { recursive: true });
@@ -182,12 +179,7 @@ async function generateMeetingPDF(meeting, actions) {
         path: pdfPath,
         format: 'A4',
         printBackground: true,
-        margin: { 
-            top: '20mm', 
-            bottom: '20mm', 
-            left: '20mm', 
-            right: '20mm' 
-        }
+        margin: { top: '20mm', bottom: '20mm', left: '20mm', right: '20mm' }
     });
     
     await browser.close();
