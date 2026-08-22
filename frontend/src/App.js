@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-// Use environment variable or fallback to localhost for development
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 function App() {
@@ -39,6 +38,19 @@ function App() {
         e.preventDefault();
         setAuthLoading(true);
         setAuthError('');
+
+        // Basic email validation (simple but not too strict)
+        if (!email || !email.includes('@') || !email.includes('.')) {
+            setAuthError('Please enter a valid email address');
+            setAuthLoading(false);
+            return;
+        }
+
+        if (!password || password.length < 6) {
+            setAuthError('Password must be at least 6 characters');
+            setAuthLoading(false);
+            return;
+        }
 
         try {
             const endpoint = isLogin ? '/api/auth/signin' : '/api/auth/signup';
@@ -190,7 +202,7 @@ function App() {
                     <form onSubmit={handleAuth}>
                         <input
                             type="email"
-                            placeholder="Email"
+                            placeholder="Enter your email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
@@ -205,16 +217,20 @@ function App() {
                         />
                         {authError && <p className="auth-error">{authError}</p>}
                         <button type="submit" disabled={authLoading}>
-                            {authLoading ? 'Loading...' : (isLogin ? 'Sign In' : 'Sign Up')}
+                            {authLoading ? 'Loading...' : (isLogin ? 'Sign In' : 'Create Account')}
                         </button>
                     </form>
                     
                     <p className="auth-switch">
                         {isLogin ? "Don't have an account?" : "Already have an account?"}
                         <button onClick={() => { setIsLogin(!isLogin); setAuthError(''); }}>
-                            {isLogin ? 'Sign Up' : 'Sign In'}
+                            {isLogin ? 'Create one' : 'Sign in'}
                         </button>
                     </p>
+                    
+                    <div style={{ marginTop: '20px', fontSize: '12px', color: '#888' }}>
+                        <p>Demo: demouser789@proton.me / SecurePass123!</p>
+                    </div>
                 </div>
             </div>
         );
