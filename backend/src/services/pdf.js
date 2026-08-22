@@ -160,10 +160,37 @@ async function generateMeetingPDF(meeting, actions) {
     </html>
     `;
 
-    const browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
+    // Use new headless mode with proper executable path
+    let launchOptions = {
+        headless: "new",  // Use the new unified headless mode
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--disable-gpu'
+        ]
+    };
+
+    // Try to use system Chrome on Render with environment variable
+    if (process.env.RENDER) {
+        // On Render, Chrome might be at this path
+        const chromePaths = [
+            '/usr/bin/google-chrome',
+            '/usr/bin/chromium',
+            '/usr/bin/chromium-browser'
+        ];
+        
+        for (const chromePath of chromePaths) {
+            if (fs.existsSync(chromePath)) {
+                launchOptions.executablePath = chromePath;
+                console.log(`✅ Found Chrome at: ${chromePath}`);
+                break;
+            }
+        }
+    }
+
+    const browser = await puppeteer.launch(launchOptions);
     
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle0' });
