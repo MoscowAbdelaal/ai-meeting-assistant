@@ -9,17 +9,34 @@ const aiRoutes = require('./routes/ai');
 const authRoutes = require('./routes/auth');
 const pdfRoutes = require('./routes/pdf');
 const cacheRoutes = require('./routes/cache');
+const metricsRoutes = require('./routes/metrics');
 const { startReminderJob } = require('./jobs/reminders');
 const cache = require('./services/cache');
-const metricsRoutes = require('./routes/metrics');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
-app.use(express.json());
-app.use('/api/metrics', metricsRoutes);
+// Allow CORS from your frontend URL
+const allowedOrigins = [
+    'http://localhost:3000',
+    'https://ai-meeting-assistant-frontend-h2po.onrender.com',
+    'https://ai-meeting-assistant-frontend.onrender.com'
+];
 
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            console.log('CORS blocked origin:', origin);
+            callback(null, true); // Allow all in development
+        }
+    },
+    credentials: true
+}));
+
+app.use(express.json());
 
 // Health check
 app.get('/health', (req, res) => {
@@ -36,6 +53,7 @@ app.use('/api/meetings', meetingRoutes);
 app.use('/api/meetings', aiRoutes);
 app.use('/api/meetings', pdfRoutes);
 app.use('/api/cache', cacheRoutes);
+app.use('/api/metrics', metricsRoutes);
 
 // Start server
 async function start() {
