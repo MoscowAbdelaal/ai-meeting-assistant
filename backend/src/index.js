@@ -8,6 +8,7 @@ const meetingRoutes = require('./routes/meetings');
 const aiRoutes = require('./routes/ai');
 const authRoutes = require('./routes/auth');
 const pdfRoutes = require('./routes/pdf');
+const { startReminderJob } = require('./jobs/reminders');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -29,6 +30,10 @@ app.use('/api/meetings', pdfRoutes);
 // Start server
 async function start() {
     await initDatabase();
+    
+    // Start the background job
+    startReminderJob();
+    
     app.listen(PORT, () => {
         console.log(`🚀 Backend running at http://localhost:${PORT}`);
         console.log(`📚 Health: http://localhost:${PORT}/health`);
@@ -36,6 +41,7 @@ async function start() {
         console.log(`📋 Meetings: http://localhost:${PORT}/api/meetings`);
         console.log(`🧠 AI Process: POST /api/meetings/:id/process`);
         console.log(`📄 PDF: GET /api/meetings/:id/pdf`);
+        console.log(`⏰ Reminders: Scheduled daily at 9:00 AM`);
     });
 }
 

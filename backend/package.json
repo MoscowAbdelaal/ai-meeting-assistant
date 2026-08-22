@@ -15,6 +15,8 @@
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "inngest": "^0.9.0",
+    "node-cron": "^4.6.0",
+    "nodemailer": "^9.0.5",
     "openai": "^3.3.0",
     "playwright": "^1.62.1",
     "sqlite": "^4.1.2",

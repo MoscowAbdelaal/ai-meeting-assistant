@@ -23,7 +23,7 @@ async function initDatabase() {
         )
     `);
 
-    // Create action_items table
+    // Create action_items table with status
     await db.exec(`
         CREATE TABLE IF NOT EXISTS action_items (
             id TEXT PRIMARY KEY,
