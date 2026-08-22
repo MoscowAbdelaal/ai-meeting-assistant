@@ -1,17 +1,25 @@
 const express = require('express');
 const { processMeeting } = require('../services/ai');
 const { getDb } = require('../database');
+const { requireAuth } = require('../services/auth');
 
 const router = express.Router();
+
+// All AI routes require authentication
+router.use(requireAuth);
 
 // POST /api/meetings/:id/process - Process meeting with AI
 router.post('/:id/process', async (req, res) => {
     try {
         const db = await getDb();
         const meetingId = req.params.id;
+        const userId = req.user.id;
 
-        // Get meeting from DB
-        const meeting = await db.get('SELECT * FROM meetings WHERE id = ?', [meetingId]);
+        // Get meeting from DB (verify ownership)
+        const meeting = await db.get(
+            'SELECT * FROM meetings WHERE id = ? AND user_id = ?',
+            [meetingId, userId]
+        );
 
         if (!meeting) {
             return res.status(404).json({ error: 'Meeting not found' });
@@ -35,11 +43,12 @@ router.post('/:id/process', async (req, res) => {
         await db.run(
             `UPDATE meetings 
              SET summary = ?, decisions = ? 
-             WHERE id = ?`,
+             WHERE id = ? AND user_id = ?`,
             [
                 result.summary,
                 JSON.stringify(result.decisions || []),
-                meetingId
+                meetingId,
+                userId
             ]
         );
 
@@ -62,7 +71,10 @@ router.post('/:id/process', async (req, res) => {
         }
 
         // Get updated meeting with actions
-        const updated = await db.get('SELECT * FROM meetings WHERE id = ?', [meetingId]);
+        const updated = await db.get(
+            'SELECT * FROM meetings WHERE id = ? AND user_id = ?',
+            [meetingId, userId]
+        );
         const actions = await db.all(
             'SELECT * FROM action_items WHERE meeting_id = ?',
             [meetingId]
@@ -88,9 +100,22 @@ router.post('/:id/process', async (req, res) => {
 router.get('/:id/actions', async (req, res) => {
     try {
         const db = await getDb();
+        const meetingId = req.params.id;
+        const userId = req.user.id;
+
+        // Verify ownership
+        const meeting = await db.get(
+            'SELECT * FROM meetings WHERE id = ? AND user_id = ?',
+            [meetingId, userId]
+        );
+
+        if (!meeting) {
+            return res.status(404).json({ error: 'Meeting not found' });
+        }
+
         const actions = await db.all(
             'SELECT * FROM action_items WHERE meeting_id = ? ORDER BY created_at DESC',
-            [req.params.id]
+            [meetingId]
         );
 
         res.json({ actionItems: actions });

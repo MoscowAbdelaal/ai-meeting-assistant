@@ -10,10 +10,11 @@ async function initDatabase() {
         driver: sqlite3.Database
     });
 
-    // Create meetings table
+    // Create meetings table with user_id
     await db.exec(`
         CREATE TABLE IF NOT EXISTS meetings (
             id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
             title TEXT NOT NULL,
             transcript TEXT NOT NULL,
             summary TEXT,

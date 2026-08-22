@@ -1,13 +1,18 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { getDb } = require('../database');
+const { requireAuth } = require('../services/auth');
 
 const router = express.Router();
+
+// All meeting routes require authentication
+router.use(requireAuth);
 
 // POST /api/meetings - Create a new meeting
 router.post('/', async (req, res) => {
     try {
         const { title, transcript } = req.body;
+        const userId = req.user.id;
 
         if (!title || !transcript) {
             return res.status(400).json({
@@ -19,8 +24,8 @@ router.post('/', async (req, res) => {
         const id = `meeting_${Date.now()}`;
 
         await db.run(
-            'INSERT INTO meetings (id, title, transcript) VALUES (?, ?, ?)',
-            [id, title, transcript]
+            'INSERT INTO meetings (id, user_id, title, transcript) VALUES (?, ?, ?, ?)',
+            [id, userId, title, transcript]
         );
 
         const meeting = await db.get('SELECT * FROM meetings WHERE id = ?', [id]);
@@ -36,11 +41,35 @@ router.post('/', async (req, res) => {
     }
 });
 
+// GET /api/meetings - Get all meetings for current user
+router.get('/', async (req, res) => {
+    try {
+        const db = await getDb();
+        const userId = req.user.id;
+        
+        const meetings = await db.all(
+            'SELECT * FROM meetings WHERE user_id = ? ORDER BY created_at DESC',
+            [userId]
+        );
+
+        res.json({ meetings });
+
+    } catch (error) {
+        console.error('Error getting meetings:', error);
+        res.status(500).json({ error: 'Failed to get meetings' });
+    }
+});
+
 // GET /api/meetings/:id - Get a meeting by ID
 router.get('/:id', async (req, res) => {
     try {
         const db = await getDb();
-        const meeting = await db.get('SELECT * FROM meetings WHERE id = ?', [req.params.id]);
+        const userId = req.user.id;
+        
+        const meeting = await db.get(
+            'SELECT * FROM meetings WHERE id = ? AND user_id = ?',
+            [req.params.id, userId]
+        );
 
         if (!meeting) {
             return res.status(404).json({ error: 'Meeting not found' });
@@ -51,20 +80,6 @@ router.get('/:id', async (req, res) => {
     } catch (error) {
         console.error('Error getting meeting:', error);
         res.status(500).json({ error: 'Failed to get meeting' });
-    }
-});
-
-// GET /api/meetings - Get all meetings
-router.get('/', async (req, res) => {
-    try {
-        const db = await getDb();
-        const meetings = await db.all('SELECT * FROM meetings ORDER BY created_at DESC');
-
-        res.json({ meetings });
-
-    } catch (error) {
-        console.error('Error getting meetings:', error);
-        res.status(500).json({ error: 'Failed to get meetings' });
     }
 });
 
