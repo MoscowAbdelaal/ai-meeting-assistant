@@ -1,17 +1,17 @@
-# AI Meeting Assistant
+# 📋 AI Meeting Assistant
 
 AI-powered tool that extracts summaries, decisions, and action items from meeting transcripts.
 
 ## 🚀 Live Demo
 
-- **Frontend**: [https://ai-meeting-assistant-frontend.onrender.com](https://ai-meeting-assistant-frontend.onrender.com)
-- **Backend API**: [https://ai-meeting-assistant.onrender.com](https://ai-meeting-assistant.onrender.com)
+- **Frontend**: https://ai-meeting-assistant-frontend-h2po.onrender.com
+- **Backend API**: https://ai-meeting-assistant-h0if.onrender.com
 
-## 📋 Features
+## ✨ Features
 
 - ✅ **Authentication** - Sign up, login, protected routes (Supabase)
 - ✅ **AI Processing** - Extract summaries, decisions, action items (Gemini 3.1 Flash Lite)
-- ✅ **PDF Reports** - Professional meeting reports with Playwright
+- ✅ **PDF Reports** - Professional meeting reports with Puppeteer
 - ✅ **Email Reminders** - Daily cron job for overdue action items
 - ✅ **Caching** - In-memory cache for AI results (24-hour TTL)
 - ✅ **Rate Limiting** - 5/min for auth, 10/hour for AI
@@ -27,7 +27,7 @@ AI-powered tool that extracts summaries, decisions, and action items from meetin
 | Database | SQLite |
 | Authentication | Supabase |
 | AI | Google Gemini 3.1 Flash Lite |
-| PDF Generation | Playwright |
+| PDF Generation | Puppeteer |
 | Background Jobs | Node-cron |
 | Caching | In-memory TTL |
 | Rate Limiting | Express-rate-limit |
