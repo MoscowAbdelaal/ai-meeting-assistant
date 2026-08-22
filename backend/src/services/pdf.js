@@ -1,6 +1,53 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
+const { install } = require('@puppeteer/browsers');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
+
+async function getChromePath() {
+    // Try to find existing Chrome
+    const possiblePaths = [
+        '/usr/bin/google-chrome',
+        '/usr/bin/chromium',
+        '/usr/bin/chromium-browser',
+        '/usr/bin/chrome',
+        '/opt/google/chrome/chrome',
+        '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+        'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+    ];
+
+    for (const p of possiblePaths) {
+        if (fs.existsSync(p)) {
+            console.log(`✅ Found Chrome at: ${p}`);
+            return p;
+        }
+    }
+
+    // Download Chrome to a writable directory
+    console.log('📦 Downloading Chrome for PDF generation...');
+    const cacheDir = path.join(__dirname, '../../.chrome-cache');
+    
+    if (!fs.existsSync(cacheDir)) {
+        fs.mkdirSync(cacheDir, { recursive: true });
+    }
+
+    try {
+        const browser = await install({
+            cacheDir: cacheDir,
+            browser: 'chrome',
+            platform: os.platform(),
+            buildId: 'latest',
+        });
+        
+        const executablePath = browser.executablePath;
+        console.log(`✅ Downloaded Chrome to: ${executablePath}`);
+        return executablePath;
+    } catch (error) {
+        console.error('❌ Failed to download Chrome:', error.message);
+        // Fallback: try to use system Chrome
+        return '/usr/bin/google-chrome';
+    }
+}
 
 async function generateMeetingPDF(meeting, actions) {
     let decisions = [];
@@ -160,37 +207,19 @@ async function generateMeetingPDF(meeting, actions) {
     </html>
     `;
 
-    // Use new headless mode with proper executable path
-    let launchOptions = {
-        headless: "new",  // Use the new unified headless mode
+    // Get Chrome path
+    const chromePath = await getChromePath();
+    
+    const browser = await puppeteer.launch({
+        executablePath: chromePath,
+        headless: "new",
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
-            '--disable-accelerated-2d-canvas',
             '--disable-gpu'
         ]
-    };
-
-    // Try to use system Chrome on Render with environment variable
-    if (process.env.RENDER) {
-        // On Render, Chrome might be at this path
-        const chromePaths = [
-            '/usr/bin/google-chrome',
-            '/usr/bin/chromium',
-            '/usr/bin/chromium-browser'
-        ];
-        
-        for (const chromePath of chromePaths) {
-            if (fs.existsSync(chromePath)) {
-                launchOptions.executablePath = chromePath;
-                console.log(`✅ Found Chrome at: ${chromePath}`);
-                break;
-            }
-        }
-    }
-
-    const browser = await puppeteer.launch(launchOptions);
+    });
     
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle0' });
