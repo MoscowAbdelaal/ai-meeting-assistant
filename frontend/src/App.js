@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
+// Use environment variable or fallback to localhost for development
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [user, setUser] = useState(null);
@@ -18,8 +21,6 @@ function App() {
     const [loading, setLoading] = useState(false);
     const [processingId, setProcessingId] = useState(null);
     const [expandedMeeting, setExpandedMeeting] = useState(null);
-
-    const API_URL = 'http://localhost:3001';
 
     // Check for saved token on load
     useEffect(() => {
