@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "jest --testTimeout=30000"
+    "test": "jest --testTimeout=30000 --forceExit"
   },
   "dependencies": {
     "@google/generative-ai": "^0.1.0",
